@@ -2,30 +2,31 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useSession, signOut } from "next-auth/react"
 import { Button } from "@/components/ui/button"
-import { Menu, X, Phone, ChevronDown } from "lucide-react"
+import { Menu, X, Phone, ChevronDown, User, LogOut } from "lucide-react"
 
 const navItems = [
   { label: "首页", href: "/" },
   {
     label: "元素检测",
-    href: "/pricing",
+    href: "/services",
     children: [
-      { label: "XRF荧光光谱", href: "/pricing?tab=xrf" },
-      { label: "ICP-MS质谱", href: "/pricing?tab=icp" },
-      { label: "原子吸收光谱", href: "/pricing?tab=aas" },
-      { label: "X射线衍射", href: "/pricing?tab=xrd" },
+      { label: "XRF荧光光谱", href: "/services?cat=xrf" },
+      { label: "ICP-MS质谱", href: "/services?cat=icp" },
+      { label: "原子吸收光谱", href: "/services?cat=aas" },
+      { label: "X射线衍射", href: "/services?cat=xrd" },
       { label: "查看全部检测项目", href: "/services" },
     ],
   },
   {
     label: "矿物分析",
-    href: "/pricing",
+    href: "/services",
     children: [
-      { label: "矿物鉴定", href: "/pricing?tab=mineral-identify" },
-      { label: "品位分析", href: "/pricing?tab=grade" },
-      { label: "物相分析", href: "/pricing?tab=phase" },
+      { label: "矿物鉴定", href: "/services?cat=mineral" },
+      { label: "品位分析", href: "/services?cat=grade" },
+      { label: "物相分析", href: "/services?cat=phase" },
     ],
   },
   { label: "送检指南", href: "/guide" },
@@ -33,10 +34,9 @@ const navItems = [
     label: "一站式服务",
     href: "/services",
     children: [
-      { label: "立即下单", href: "/pricing" },
+      { label: "立即下单", href: "/booking" },
       { label: "立即预约", href: "/booking" },
-      { label: "检测项目搜索", href: "/pricing" },
-      { label: "一站式矿业技术", href: "/mining" },
+      { label: "一站式矿业技术", href: "/services" },
     ],
   },
   { label: "合作伙伴", href: "/partners" },
@@ -53,7 +53,15 @@ const navItems = [
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
   const pathname = usePathname()
+  const { data: session, status } = useSession()
+  const userRole = (session?.user as any)?.role
+  const isAdmin = userRole === "ADMIN" || userRole === "SUPER_ADMIN"
+
+  async function handleSignOut() {
+    await signOut({ callbackUrl: "/" })
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
@@ -100,12 +108,47 @@ export function Header() {
               <Phone className="h-4 w-4 text-primary" />
               18600104701
             </a>
-            <Link href="/login">
-              <Button variant="outline" size="sm">登录</Button>
-            </Link>
-            <Link href="/booking">
-              <Button size="sm">立即下单</Button>
-            </Link>
+            
+            {status === "loading" ? (
+              <Button variant="outline" size="sm" disabled>加载中...</Button>
+            ) : session ? (
+              <div className="relative">
+                <button 
+                  className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm"
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                >
+                  <User className="h-4 w-4" />
+                  {session.user?.name || session.user?.email}
+                </button>
+                {userMenuOpen && (
+                  <div className="absolute right-0 top-full z-50 mt-1 w-40 rounded-lg border border-border bg-card py-2 shadow-lg">
+                    <Link 
+                      href={isAdmin ? "/admin" : "/dashboard"} 
+                      className="block px-4 py-2 text-sm hover:bg-muted"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      {isAdmin ? "管理后台" : "我的订单"}
+                    </Link>
+                    <button 
+                      onClick={handleSignOut}
+                      className="flex w-full items-center gap-2 px-4 py-2 text-sm text-left hover:bg-muted"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      退出登录
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                <Link href="/login">
+                  <Button variant="outline" size="sm">登录</Button>
+                </Link>
+                <Link href="/register">
+                  <Button size="sm">注册</Button>
+                </Link>
+              </>
+            )}
           </div>
 
           <button
@@ -149,12 +192,23 @@ export function Header() {
               </div>
             ))}
             <div className="flex gap-2 pt-4">
-              <Link href="/login" className="flex-1">
-                <Button variant="outline" size="sm" className="w-full">登录</Button>
-              </Link>
-              <Link href="/booking" className="flex-1">
-                <Button size="sm" className="w-full">立即下单</Button>
-              </Link>
+              {session ? (
+                <button 
+                  onClick={handleSignOut}
+                  className="flex-1 rounded-md border px-3 py-2 text-center"
+                >
+                  退出登录
+                </button>
+              ) : (
+                <>
+                  <Link href="/login" className="flex-1">
+                    <Button variant="outline" size="sm" className="w-full">登录</Button>
+                  </Link>
+                  <Link href="/register" className="flex-1">
+                    <Button size="sm" className="w-full">注册</Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

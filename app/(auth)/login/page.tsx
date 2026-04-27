@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Suspense, useState, useEffect } from "react"
-import { signIn, useSession } from "next-auth/react"
+import { signIn } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -15,7 +15,6 @@ function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const error = searchParams.get("error")
-  const { data: session, status } = useSession()
 
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
@@ -24,27 +23,12 @@ function LoginForm() {
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState(error ? "登录失败，请检查账号密码" : "")
   const [successMsg, setSuccessMsg] = useState("")
-  const [shouldRedirect, setShouldRedirect] = useState(false)
-
-  useEffect(() => {
-    if (shouldRedirect && session && status === "authenticated") {
-      const userRole = (session.user as any)?.role
-      console.log("Doing redirect, role:", userRole)
-      // 使用 window.location 强制跳转
-      if (userRole === "ADMIN" || userRole === "SUPER_ADMIN") {
-        window.location.href = "/admin"
-      } else {
-        window.location.href = "/dashboard/orders"
-      }
-    }
-  }, [shouldRedirect, session, status])
 
   async function handleEmailLogin(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setErrorMsg("")
     setSuccessMsg("")
-    setShouldRedirect(false)
 
     if (!email || !password) {
       setErrorMsg("请输入邮箱和密码")
@@ -65,10 +49,14 @@ function LoginForm() {
         setErrorMsg("邮箱或密码错误")
         setSuccessMsg("")
         setLoading(false)
-      } else {
-        setSuccessMsg("登录成功，正在跳转...")
-        setShouldRedirect(true)
+        return
       }
+
+      // 登录成功，等待一下然后刷新页面并跳转
+      setSuccessMsg("登录成功...")
+      setTimeout(() => {
+        window.location.href = "/admin"
+      }, 1000)
     } catch (err) {
       console.error("Login error:", err)
       setErrorMsg("登录出错，请稍后重试")
@@ -82,7 +70,6 @@ function LoginForm() {
     setLoading(true)
     setErrorMsg("")
     setSuccessMsg("")
-    setShouldRedirect(false)
 
     if (!phone || !password) {
       setErrorMsg("请输入手机号和密码")
@@ -103,10 +90,13 @@ function LoginForm() {
         setErrorMsg("手机号或密码错误")
         setSuccessMsg("")
         setLoading(false)
-      } else {
-        setSuccessMsg("登录成功正在跳转...")
-        setShouldRedirect(true)
+        return
       }
+
+      setSuccessMsg("登录成功...")
+      setTimeout(() => {
+        window.location.href = "/dashboard/orders"
+      }, 1000)
     } catch (err) {
       console.error("Login error:", err)
       setErrorMsg("登录出错，请稍后重试")

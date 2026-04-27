@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server"
-import { signOut } from "@/lib/auth"
 
 export async function POST() {
-  try {
-    await signOut()
-    return NextResponse.json({ success: true, message: "Signed out" })
-  } catch (error) {
-    console.error("Sign out error:", error)
-    return NextResponse.json({ error: "Error signing out" }, { status: 500 })
-  }
+  const response = NextResponse.json({ success: true })
+  response.cookies.set("auth-token", "", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 0,
+    path: "/"
+  })
+  return response
 }

@@ -38,9 +38,9 @@ const navItems = [
       { label: "一站式矿业技术", href: "/services" },
     ],
   },
+  { label: "定价下单", href: "/pricing" },
   { label: "矿业服务", href: "/mining" },
   { label: "送检指南", href: "/guide" },
-  { label: "定价下单", href: "/pricing" },
   { label: "关于我们", href: "/about" },
   {
     label: "加入我们",

@@ -1,31 +1,33 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import { getToken } from "next-auth/jwt"
+import { auth } from "@/lib/auth"
 
-const publicPaths = ["/", "/login", "/register", "/guide", "/pricing", "/services", "/about", "/consulting", "/faq", "/news", "/booking", "/_vercel", "/_next", "/api/auth"]
+const publicPaths = ["/", "/login", "/register", "/guide", "/pricing", "/services", "/about", "/consulting", "/faq", "/news", "/booking", "/_vercel", "/_next"]
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
+  // Public paths don't need auth
   const isPublic = publicPaths.some((p) => pathname === p || pathname.startsWith(p + "/"))
   if (isPublic) return NextResponse.next()
 
-  // Allow all /api/* endpoints to pass through - they handle their own auth
+  // API routes handle their own auth
   if (pathname.startsWith("/api/")) {
     return NextResponse.next()
   }
 
+  // Protected routes
   if (pathname.startsWith("/dashboard") || pathname.startsWith("/admin")) {
     try {
-      const token = await getToken({ req: request, secret: process.env.AUTH_SECRET })
+      const session = await auth()
       
-      if (!token) {
+      if (!session?.user) {
         const loginUrl = new URL("/login", request.url)
         loginUrl.searchParams.set("callbackUrl", pathname)
         return NextResponse.redirect(loginUrl)
       }
     } catch (error) {
-      console.error("Middleware error:", error)
+      console.error("Middleware auth error:", error)
       const loginUrl = new URL("/login", request.url)
       return NextResponse.redirect(loginUrl)
     }

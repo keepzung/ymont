@@ -2,27 +2,46 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { getToken } from "next-auth/jwt"
 
-const publicPaths = ["/", "/login", "/register", "/guide", "/pricing", "/about", "/consulting", "/api/auth"]
+const publicPaths = ["/", "/login", "/register", "/guide", "/pricing", "/services", "/about", "/consulting", "/faq", "/news", "/booking", "/api/auth", "/_vercel"]
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+  const searchParams = request.nextUrl.searchParams
+  const callbackUrl = searchParams.get("callbackUrl")
+
+  // Allow callback URLs from login
+  if (pathname === "/login" && callbackUrl) {
+    return NextResponse.next()
+  }
 
   const isPublic = publicPaths.some((p) => pathname === p || pathname.startsWith(p + "/"))
   if (isPublic) return NextResponse.next()
 
   if (pathname.startsWith("/dashboard") || pathname.startsWith("/admin")) {
-    const token = await getToken({ req: request })
-    if (!token) {
+    try {
+      const token = await getToken({ req: request, secret: process.env.AUTH_SECRET })
+      
+      console.log("Middleware token:", token)
+      
+      if (!token) {
+        const loginUrl = new URL("/login", request.url)
+        loginUrl.searchParams.set("callbackUrl", pathname)
+        return NextResponse.redirect(loginUrl)
+      }
+
+      if (pathname.startsWith("/admin")) {
+        const userRole = token.role
+        console.log("Middleware role:", userRole)
+        if (userRole !== "ADMIN" && userRole !== "SUPER_ADMIN") {
+          return NextResponse.redirect(new URL("/", request.url))
+        }
+      }
+    } catch (error) {
+      console.error("Middleware error:", error)
       const loginUrl = new URL("/login", request.url)
       loginUrl.searchParams.set("callbackUrl", pathname)
       return NextResponse.redirect(loginUrl)
     }
-
-    if (pathname.startsWith("/admin")) {
-    if (token.role !== "ADMIN" && token.role !== "SUPER_ADMIN") {
-      return NextResponse.redirect(new URL("/", request.url))
-    }
-  }
   }
 
   return NextResponse.next()

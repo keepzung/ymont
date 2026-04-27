@@ -14,7 +14,6 @@ import { AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react"
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard"
   const error = searchParams.get("error")
   const { data: session, status } = useSession()
 
@@ -24,11 +23,13 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState(error ? "登录失败，请检查账号密码" : "")
+  const [successMsg, setSuccessMsg] = useState("")
 
   useEffect(() => {
+    console.log("Session check:", status, session)
     if (status === "authenticated" && session) {
       const userRole = (session.user as any)?.role
-      console.log("Session role:", userRole)
+      console.log("Logged in, role:", userRole)
       if (userRole === "ADMIN" || userRole === "SUPER_ADMIN") {
         router.push("/admin")
       } else {
@@ -41,6 +42,7 @@ function LoginForm() {
     e.preventDefault()
     setLoading(true)
     setErrorMsg("")
+    setSuccessMsg("")
 
     if (!email || !password) {
       setErrorMsg("请输入邮箱和密码")
@@ -48,21 +50,27 @@ function LoginForm() {
       return
     }
 
+    setSuccessMsg("正在登录...")
     try {
       const result = await signIn("credentials", {
         email, password,
         redirect: false,
       })
 
-      console.log("Login result:", result)
+      console.log("SignIn result:", result)
 
       if (result?.error) {
-        setErrorMsg("邮箱或密码错误，请检查后重试")
+        setErrorMsg("邮箱或密码错误")
+        setSuccessMsg("")
         setLoading(false)
+      } else {
+        setSuccessMsg("登录成功，正在跳转...")
+        router.refresh()
       }
     } catch (err) {
       console.error("Login error:", err)
       setErrorMsg("登录出错，请稍后重试")
+      setSuccessMsg("")
       setLoading(false)
     }
   }
@@ -71,6 +79,7 @@ function LoginForm() {
     e.preventDefault()
     setLoading(true)
     setErrorMsg("")
+    setSuccessMsg("")
 
     if (!phone || !password) {
       setErrorMsg("请输入手机号和密码")
@@ -78,21 +87,27 @@ function LoginForm() {
       return
     }
 
+    setSuccessMsg("正在登录...")
     try {
       const result = await signIn("credentials", {
         phone, password,
         redirect: false,
       })
 
-      console.log("Login result:", result)
+      console.log("SignIn result:", result)
 
       if (result?.error) {
-        setErrorMsg("手机号或密码错误，请检查后重试")
+        setErrorMsg("手机号或密码错误")
+        setSuccessMsg("")
         setLoading(false)
+      } else {
+        setSuccessMsg("登录成功正在跳转...")
+        router.refresh()
       }
     } catch (err) {
       console.error("Login error:", err)
       setErrorMsg("登录出错，请稍后重试")
+      setSuccessMsg("")
       setLoading(false)
     }
   }
@@ -116,10 +131,10 @@ function LoginForm() {
             {errorMsg}
           </div>
         )}
-        {loading && (
-          <div className="mb-4 flex items-center gap-2 rounded-lg bg-primary/10 p-3 text-sm">
+        {successMsg && (
+          <div className="mb-4 flex items-center gap-2 rounded-lg bg-green-500/10 p-3 text-sm text-green-600">
             <Loader2 className="h-4 w-4 animate-spin" />
-            正在登录...
+            {successMsg}
           </div>
         )}
         <Tabs defaultValue="email" className="w-full">

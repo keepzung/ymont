@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { AlertCircle, Eye, EyeOff } from "lucide-react"
+import { AlertCircle, CheckCircle, Eye, EyeOff } from "lucide-react"
+import { getSession } from "next-auth/react"
 
 function LoginForm() {
   const router = useRouter()
@@ -29,22 +30,42 @@ function LoginForm() {
     setLoading(true)
     setErrorMsg("")
 
-    const result = await signIn("credentials", {
-      email, password,
-      redirect: false,
-    })
-
-    if (result?.error) {
-      setErrorMsg("邮箱或密码错误")
+    if (!email || !password) {
+      setErrorMsg("请输入邮箱和密码")
       setLoading(false)
-    } else {
-      const userRole = (result as any)?.role
+      return
+    }
+
+    try {
+      const result = await signIn("credentials", {
+        email, password,
+        redirect: false,
+      })
+
+      console.log("Login result:", result)
+
+      if (result?.error) {
+        setErrorMsg("邮箱或密码错误，请检查后重试")
+        setLoading(false)
+        return
+      }
+
+      const session = await getSession()
+      console.log("Session after login:", session)
+      
+      const userRole = (session?.user as any)?.role
+      console.log("User role:", userRole)
+
       if (userRole === "ADMIN" || userRole === "SUPER_ADMIN") {
         router.push("/admin")
       } else {
         router.push("/dashboard/orders")
       }
       router.refresh()
+    } catch (err) {
+      console.error("Login error:", err)
+      setErrorMsg("登录出错，请稍后重试")
+      setLoading(false)
     }
   }
 
@@ -53,17 +74,32 @@ function LoginForm() {
     setLoading(true)
     setErrorMsg("")
 
-    const result = await signIn("credentials", {
-      phone, password,
-      redirect: false,
-    })
-
-    if (result?.error) {
-      setErrorMsg("手机号或密码错误")
+    if (!phone || !password) {
+      setErrorMsg("请输入手机号和密码")
       setLoading(false)
-    } else {
+      return
+    }
+
+    try {
+      const result = await signIn("credentials", {
+        phone, password,
+        redirect: false,
+      })
+
+      console.log("Login result:", result)
+
+      if (result?.error) {
+        setErrorMsg("手机号或密码错误，请检查后重试")
+        setLoading(false)
+        return
+      }
+
       router.push("/dashboard/orders")
       router.refresh()
+    } catch (err) {
+      console.error("Login error:", err)
+      setErrorMsg("登录出错，请稍后重试")
+      setLoading(false)
     }
   }
 

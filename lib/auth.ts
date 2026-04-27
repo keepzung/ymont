@@ -4,7 +4,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/db"
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
   pages: {
@@ -55,3 +55,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
 })
+
+export { handlers, auth, signIn, signOut }
+
+export const config = {
+  matcher: ["/((?!api/auth|_next/static|_next/image|favicon.ico|public|node_modules).*)"],
+}

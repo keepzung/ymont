@@ -91,19 +91,13 @@ export function Hero() {
 
                 {/* Quick Links */}
                 <div className="mt-6 grid grid-cols-3 gap-3">
-<Link href="/booking" className="rounded-lg bg-primary/10 px-4 py-3 text-center text-sm font-medium text-primary transition-colors hover:bg-primary/20">
+                  <Link href="/register?role=ENTERPRISE" className="rounded-lg bg-primary/10 px-4 py-3 text-center text-sm font-medium text-primary transition-colors hover:bg-primary/20">
                     企业用户
-                  </Link>
-                  <Link href="/booking" className="rounded-lg bg-accent/10 px-4 py-3 text-center text-sm font-medium text-accent-foreground transition-colors hover:bg-accent/20">
-                    科研机构
-                  </Link>
-                  <Link href="/booking" className="rounded-lg bg-muted px-4 py-3 text-center text-sm font-medium text-foreground/80 transition-colors hover:bg-muted/80">
-                    个人用户
                   </Link>
                   <Link href="/register?role=RESEARCH" className="rounded-lg bg-primary/10 px-4 py-3 text-center text-sm font-medium text-primary transition-colors hover:bg-primary/20">
                     科研机构
                   </Link>
-                  <Link href="/register?role=INDIVIDUAL" className="rounded-lg bg-muted px-4 py-3 text-center text-sm font-medium text-foreground/80 transition-colors hover:bg-muted/80">
+                  <Link href="/register?role=INDIVIDUAL" className="rounded-lg bg-primary/10 px-4 py-3 text-center text-sm font-medium text-primary transition-colors hover:bg-primary/20">
                     个人用户
                   </Link>
                 </div>

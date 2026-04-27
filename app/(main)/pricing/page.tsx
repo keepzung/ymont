@@ -4,38 +4,19 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Check, ArrowRight } from "lucide-react"
+import { Check, ArrowRight, Loader2 } from "lucide-react"
 
-const serviceCategories = [
-  {
-    name: "元素检测",
-    items: [
-      { name: "XRF荧光光谱全元素分析", instrument: "XRF" },
-      { name: "ICP-MS痕量元素分析", instrument: "ICP-MS" },
-      { name: "原子吸收光谱", instrument: "AAS" },
-      { name: "X射线衍射物相分析", instrument: "XRD" },
-      { name: "电子探针分析", instrument: "EPMA" },
-    ]
-  },
-  {
-    name: "矿物分析",
-    items: [
-      { name: "矿物鉴定", instrument: "偏光显微镜" },
-      { name: "品位分析", instrument: "化学分析" },
-      { name: "物相分析", instrument: "XRD/Rietveld" },
-    ]
-  },
-  {
-    name: "稀土元素",
-    items: [
-      { name: "稀土总量分析", instrument: "ICP-MS" },
-      { name: "稀土配分分析", instrument: "ICP-MS" },
-      { name: "稀有元素分析", instrument: "ICP-MS" },
-    ]
-  },
-]
+type Service = {
+  id: string
+  name: string
+  instrument: string
+  price: number
+  unit: string
+  turnaround: string | null
+  description: string | null
+  category: { name: string }
+}
 
 const features = [
   { title: "3.5天", desc: "平均检测周期" },
@@ -43,12 +24,52 @@ const features = [
   { title: "99%+", desc: "客户满意度" },
 ]
 
-export default function OrderPage() {
+export default function PricingPage() {
+  const [services, setServices] = useState<Service[]>([])
+  const [loading, setLoading] = useState(true)
   const [selectedServices, setSelectedServices] = useState<string[]>([])
 
-  function toggleService(name: string) {
+  useEffect(() => {
+    fetch("/api/services")
+      .then(r => r.json())
+      .then(data => { setServices(Array.isArray(data) ? data : []); setLoading(false) })
+      .catch(() => setLoading(false))
+  }, [])
+
+  function toggleService(id: string) {
     setSelectedServices(prev => 
-      prev.includes(name) ? prev.filter(s => s !== name) : [...prev, name]
+      prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
+    )
+  }
+
+  const grouped = services.reduce((acc, s) => {
+    const cat = s.category?.name || "其他"
+    if (!acc[cat]) acc[cat] = []
+    acc[cat].push(s)
+    return acc
+  }, {} as Record<string, Service[]>)
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  if (services.length === 0) {
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-12">
+        <div className="mb-12 text-center">
+          <Badge className="mb-4">服务价格</Badge>
+          <h1 className="text-3xl font-bold">检测服务</h1>
+          <p className="mt-2 text-muted-foreground">暂无检测服务，请联系客服咨询</p>
+        </div>
+        <div className="flex justify-center gap-4">
+          <Button asChild><Link href="/consulting">在线咨询</Link></Button>
+          <Button variant="outline" asChild><a href="tel:18600104701">电话咨询</a></Button>
+        </div>
+      </div>
     )
   }
 
@@ -73,24 +94,31 @@ export default function OrderPage() {
 
       <div className="mb-12">
         <h2 className="mb-6 text-xl font-bold">选择检测项目</h2>
-        {serviceCategories.map((cat) => (
-          <Card key={cat.name} className="mb-4">
-            <CardHeader><CardTitle>{cat.name}</CardTitle></CardHeader>
+        {Object.entries(grouped).map(([catName, items]) => (
+          <Card key={catName} className="mb-4">
+            <CardHeader><CardTitle>{catName}</CardTitle></CardHeader>
             <CardContent>
               <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                {cat.items.map((item) => {
-                  const isSelected = selectedServices.includes(item.name)
+                {items.map((item) => {
+                  const isSelected = selectedServices.includes(item.id)
                   return (
-                    <button key={item.name} onClick={() => toggleService(item.name)}
+                    <button key={item.id} onClick={() => toggleService(item.id)}
                       className={`flex items-center justify-between rounded-lg border p-4 text-left transition-colors ${
                         isSelected ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
                       }`}
                     >
-                      <div>
+                      <div className="flex-1">
                         <p className="font-medium">{item.name}</p>
                         <p className="text-xs text-muted-foreground">{item.instrument}</p>
+                        {item.turnaround && (
+                          <p className="text-xs text-muted-foreground">周期：{item.turnaround}</p>
+                        )}
                       </div>
-                      {isSelected && <Check className="h-5 w-5 text-primary" />}
+                      <div className="text-right">
+                        <p className="font-bold text-primary">¥{item.price}</p>
+                        <p className="text-xs text-muted-foreground">/{item.unit}</p>
+                        {isSelected && <Check className="ml-auto mt-1 h-5 w-5 text-primary" />}
+                      </div>
                     </button>
                   )
                 })}

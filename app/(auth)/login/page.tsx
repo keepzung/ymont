@@ -160,6 +160,7 @@ export default function LoginPage() {
                     </button>
                   </div>
                 </div>
+                <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "登录中..." : "登录"}
                 </Button>
               </form>

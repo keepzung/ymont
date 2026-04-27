@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 
-async function getUserFromRequest(req: NextRequest) {
+export async function getUserFromRequest(req: NextRequest) {
   const token = req.cookies.get("auth-token")?.value
   
   if (!token) return null
@@ -23,17 +23,15 @@ async function getUserFromRequest(req: NextRequest) {
   }
 }
 
-export async function PATCH(req: NextRequest) {
+export async function requireAdmin(req: NextRequest): Promise<{user: any, error: NextResponse | null}> {
   const user = await getUserFromRequest(req)
-  if (!user) return NextResponse.json({ error: "请先登录" }, { status: 401 })
-
-  const body = await req.json()
-  const { name, phone, company, avatar } = body
-
-  const updated = await prisma.user.update({
-    where: { id: user.id },
-    data: { name, phone, company, avatar },
-  })
-
-  return NextResponse.json({ id: updated.id, name: updated.name, email: updated.email, role: updated.role })
+  
+  if (!user || (user.role !== "ADMIN" && user.role !== "SUPER_ADMIN")) {
+    return { 
+      user: null, 
+      error: NextResponse.json({ error: "无权限访问" }, { status: 403 }) 
+    }
+  }
+  
+  return { user, error: null }
 }

@@ -1,16 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/db"
+import { getUserFromRequest } from "@/lib/auth-helper"
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await auth()
-  const userRole = (session?.user as any)?.role
-  
-  if (!session?.user || (userRole !== "ADMIN" && userRole !== "SUPER_ADMIN")) {
-    return NextResponse.json({ error: "无权限" }, { status: 403 })
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const user = await getUserFromRequest(req)
+  if (!user || (user.role !== "ADMIN" && user.role !== "SUPER_ADMIN")) {
+    return NextResponse.json({ error: "无权限访问" }, { status: 403 })
   }
 
   const { id } = await params
@@ -19,43 +14,31 @@ export async function GET(
     include: { category: true },
   })
 
-  if (!service) return NextResponse.json({ error: "不存在" }, { status: 404 })
-
+  if (!service) return NextResponse.json({ error: "服务不存在" }, { status: 404 })
   return NextResponse.json(service)
 }
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await auth()
-  const userRole = (session?.user as any)?.role
-  
-  if (!session?.user || (userRole !== "ADMIN" && userRole !== "SUPER_ADMIN")) {
-    return NextResponse.json({ error: "无权限" }, { status: 403 })
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const user = await getUserFromRequest(req)
+  if (!user || (user.role !== "ADMIN" && user.role !== "SUPER_ADMIN")) {
+    return NextResponse.json({ error: "无权限访问" }, { status: 403 })
   }
 
   const { id } = await params
   const body = await req.json()
-  const { name, code, instrument, price, unit, turnaround, description, categoryId, isActive } = body
 
   const service = await prisma.servicePrice.update({
     where: { id },
-    data: { name, code, instrument, price, unit, turnaround, description, categoryId, isActive },
+    data: body,
   })
 
   return NextResponse.json(service)
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await auth()
-  const userRole = (session?.user as any)?.role
-  
-  if (!session?.user || (userRole !== "ADMIN" && userRole !== "SUPER_ADMIN")) {
-    return NextResponse.json({ error: "无权限" }, { status: 403 })
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const user = await getUserFromRequest(req)
+  if (!user || (user.role !== "ADMIN" && user.role !== "SUPER_ADMIN")) {
+    return NextResponse.json({ error: "无权限访问" }, { status: 403 })
   }
 
   const { id } = await params

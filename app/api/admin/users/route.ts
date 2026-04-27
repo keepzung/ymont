@@ -1,13 +1,34 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 
-export async function GET(req: NextRequest) {
-  const session = await auth()
-  const userRole = (session?.user as any)?.role
+async function getUserFromRequest(req: NextRequest) {
+  const token = req.cookies.get("auth-token")?.value
   
-  if (!session?.user || (userRole !== "ADMIN" && userRole !== "SUPER_ADMIN")) {
-    return NextResponse.json({ error: "无权限" }, { status: 403 })
+  if (!token) return null
+  
+  try {
+    const decoded = Buffer.from(token, "base64").toString()
+    const [userId, role] = decoded.split(":")
+    
+    if (!userId) return null
+    
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, name: true, email: true, phone: true, role: true }
+    })
+    
+    return user
+  } catch {
+    return null
+  }
+}
+
+export async function GET(req: NextRequest) {
+  const user = await getUserFromRequest(req)
+  
+  // Check admin role
+  if (!user || (user.role !== "ADMIN" && user.role !== "SUPER_ADMIN")) {
+    return NextResponse.json({ error: "无权限访问" }, { status: 403 })
   }
 
   const { searchParams } = new URL(req.url)

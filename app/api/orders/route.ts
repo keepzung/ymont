@@ -1,19 +1,39 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { orderSchema } from "@/lib/validations"
 import { generateOrderNo } from "@/lib/constants"
 
-export async function GET(req: NextRequest) {
-  const session = await auth()
-  const userRole = (session?.user as any)?.role
+async function getUserFromRequest(req: NextRequest) {
+  const token = req.cookies.get("auth-token")?.value
   
-  if (!session?.user) return NextResponse.json({ error: "请先登录" }, { status: 401 })
+  if (!token) return null
+  
+  try {
+    const decoded = Buffer.from(token, "base64").toString()
+    const [userId] = decoded.split(":")
+    
+    if (!userId) return null
+    
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, name: true, email: true, phone: true, role: true }
+    })
+    
+    return user
+  } catch {
+    return null
+  }
+}
+
+export async function GET(req: NextRequest) {
+  const user = await getUserFromRequest(req)
+  
+  if (!user) return NextResponse.json({ error: "请先登录" }, { status: 401 })
 
   // Admin can see all orders, regular users see only their own
-  const where = (userRole === "ADMIN" || userRole === "SUPER_ADMIN") 
+  const where = (user.role === "ADMIN" || user.role === "SUPER_ADMIN") 
     ? {} 
-    : { userId: session.user.id }
+    : { userId: user.id }
 
   const orders = await prisma.order.findMany({
     where,
@@ -28,8 +48,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: "请先登录" }, { status: 401 })
+  const user = await getUserFromRequest(req)
+  
+  if (!user) return NextResponse.json({ error: "请先登录" }, { status: 401 })
 
   const body = await req.json()
   const parsed = orderSchema.safeParse(body)
@@ -46,7 +67,7 @@ export async function POST(req: NextRequest) {
 
   const order = await prisma.order.create({
     data: {
-      orderNo, userId: session.user.id,
+      orderNo, userId: user.id,
       status: "PENDING_PAYMENT",
       totalAmount, discountAmount: 0, finalAmount,
       sampleName, sampleType, sampleWeight, sampleSize, sampleDesc, remark,

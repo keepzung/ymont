@@ -2,16 +2,16 @@ import { z } from "zod"
 
 export const loginSchema = z.object({
   email: z.string().email("请输入有效邮箱").optional(),
-  phone: z.string().regex(/^1[3-9]\d{9}$/, "请输入有效手机号").optional(),
+  phone: z.string().min(11, "请输入有效手机号").optional(),
   password: z.string().min(6, "密码至少6位"),
 }).refine((data) => data.email || data.phone, {
   message: "请输入邮箱或手机号",
 })
 
 export const registerSchema = z.object({
-  name: z.string().min(2, "姓名至少2个字符").max(20, "姓名最多20个字符"),
-  email: z.string().email("请输入有效邮箱"),
-  phone: z.string().regex(/^1[3-9]\d{9}$/, "请输入有效手机号"),
+  name: z.string().min(1, "请输入姓名").max(20, "姓名最多20个字符"),
+  email: z.string().email("请输入有效邮箱").optional().or(z.literal("")),
+  phone: z.string().min(11, "请输入有效手机号").optional().or(z.literal("")),
   password: z.string().min(6, "密码至少6位").max(32, "密码最多32位"),
   confirmPassword: z.string(),
   role: z.enum(["INDIVIDUAL", "ENTERPRISE", "RESEARCH"]),
@@ -19,6 +19,8 @@ export const registerSchema = z.object({
 }).refine((data) => data.password === data.confirmPassword, {
   message: "两次密码不一致",
   path: ["confirmPassword"],
+}).refine((data) => data.email || data.phone, {
+  message: "请输入邮箱或手机号",
 })
 
 export const orderSchema = z.object({

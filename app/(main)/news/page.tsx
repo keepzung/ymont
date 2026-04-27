@@ -73,8 +73,8 @@ export default function NewsListPage() {
 
       <div className="mt-8 space-y-6">
         {featured && (
-          <Link href={`/news/${featured.slug}`}>
-            <Card className="overflow-hidden transition-shadow hover:shadow-lg">
+          <div>
+            <Card className="overflow-hidden">
               <div className="aspect-[21/9] w-full bg-gradient-to-br from-primary/20 to-accent/20" />
               <CardContent className="p-6">
                 <Badge className="mb-3">推荐</Badge>
@@ -86,13 +86,13 @@ export default function NewsListPage() {
                 </div>
               </CardContent>
             </Card>
-          </Link>
+          </div>
         )}
 
         <div className="grid gap-4 sm:grid-cols-2">
           {otherNews.map((item) => (
-            <Link key={item.id} href={`/news/${item.slug}`}>
-              <Card className="transition-shadow hover:shadow-md h-full">
+            <div key={item.id}>
+              <Card className="h-full">
                 <CardContent className="p-4">
                   <Badge variant="outline" className="mb-2 text-xs">新闻</Badge>
                   <h3 className="font-medium line-clamp-2">{item.title}</h3>
@@ -103,7 +103,7 @@ export default function NewsListPage() {
                   </div>
                 </CardContent>
               </Card>
-            </Link>
+            </div>
           ))}
         </div>
       </div>

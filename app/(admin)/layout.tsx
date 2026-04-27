@@ -14,10 +14,11 @@ const adminItems = [
   { label: "概览", href: "/admin", icon: LayoutDashboard },
   { label: "订单管理", href: "/admin/orders", icon: FileText },
   { label: "用户管理", href: "/admin/users", icon: Users },
-  { label: "新闻管理", href: "/admin/news", icon: Newspaper },
-  { label: "检测项目管理", href: "/admin/services", icon: FlaskConical },
+  { label: "检测分类", href: "/admin/services/categories", icon: FlaskConical },
+  { label: "检测项目", href: "/admin/services", icon: FlaskConical },
   { label: "报告管理", href: "/admin/reports", icon: FlaskConical },
   { label: "咨询管理", href: "/admin/consultations", icon: MessageSquare },
+  { label: "新闻管理", href: "/admin/news", icon: Newspaper },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

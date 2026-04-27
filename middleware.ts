@@ -2,44 +2,27 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { getToken } from "next-auth/jwt"
 
-const publicPaths = ["/", "/login", "/register", "/guide", "/pricing", "/services", "/about", "/consulting", "/faq", "/news", "/booking", "/api/auth", "/_vercel"]
+const publicPaths = ["/", "/login", "/register", "/guide", "/pricing", "/services", "/about", "/consulting", "/faq", "/news", "/booking", "/api/auth", "/_vercel", "/_next"]
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-  const searchParams = request.nextUrl.searchParams
-  const callbackUrl = searchParams.get("callbackUrl")
-
-  // Allow callback URLs from login
-  if (pathname === "/login" && callbackUrl) {
-    return NextResponse.next()
-  }
 
   const isPublic = publicPaths.some((p) => pathname === p || pathname.startsWith(p + "/"))
   if (isPublic) return NextResponse.next()
 
   if (pathname.startsWith("/dashboard") || pathname.startsWith("/admin")) {
     try {
-      const token = await getToken({ req: request, secret: process.env.AUTH_SECRET })
+      // 只检查 token 是否存在，不检查角色
+      const token = await getToken({ req: request, secret: process.env.AUTH_SECRET, absolute: false })
+      
+      console.log("Path:", pathname, "Token exists:", !!token, "Role:", token?.role)
       
       if (!token) {
-        console.log("No token found, redirecting to login")
-        const loginUrl = new URL("/login", request.url)
-        loginUrl.searchParams.set("callbackUrl", pathname)
-        return NextResponse.redirect(loginUrl)
-      }
-
-      if (pathname.startsWith("/admin")) {
-        const userRole = token.role
-        if (userRole !== "ADMIN" && userRole !== "SUPER_ADMIN") {
-          console.log("User role not admin:", userRole)
-          return NextResponse.redirect(new URL("/", request.url))
-        }
+        return NextResponse.redirect(new URL("/login", request.url))
       }
     } catch (error) {
       console.error("Middleware error:", error)
-      const loginUrl = new URL("/login", request.url)
-      loginUrl.searchParams.set("callbackUrl", pathname)
-      return NextResponse.redirect(loginUrl)
+      return NextResponse.redirect(new URL("/login", request.url))
     }
   }
 

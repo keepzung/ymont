@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ORDER_STATUS_MAP, formatCurrency, formatDate } from "@/lib/constants"
 import { Plus, Search } from "lucide-react"
+import { useAuth } from "@/components/auth-context"
 
 type Order = {
   id: string; orderNo: string; status: string; sampleName: string
@@ -21,6 +22,8 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState("ALL")
   const [search, setSearch] = useState("")
+  const { user } = useAuth()
+  const isAdmin = user?.role === "ADMIN" || user?.role === "SUPER_ADMIN"
 
   useEffect(() => {
     fetch("/api/orders")
@@ -90,12 +93,14 @@ export default function OrdersPage() {
                         {order.orderItems.map((oi) => oi.service.name).join("、")}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <p className="font-bold text-lg">{formatCurrency(order.finalAmount)}</p>
-                      {order.discountAmount > 0 && (
-                        <p className="text-xs text-muted-foreground line-through">{formatCurrency(order.totalAmount)}</p>
-                      )}
-                    </div>
+                    {isAdmin && (
+                      <div className="text-right">
+                        <p className="font-bold text-lg">{formatCurrency(order.finalAmount)}</p>
+                        {order.discountAmount > 0 && (
+                          <p className="text-xs text-muted-foreground line-through">{formatCurrency(order.totalAmount)}</p>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div className="mt-3 flex justify-end">
                     <Link href={`/dashboard/orders/${order.id}`}>

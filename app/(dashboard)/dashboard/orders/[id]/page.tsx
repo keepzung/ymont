@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator"
 import { ORDER_STATUS_MAP, ORDER_STATUS_FLOW, formatCurrency, formatDateTime } from "@/lib/constants"
 import { ArrowLeft, Download, CheckCircle, Circle, Loader } from "lucide-react"
 import Link from "next/link"
+import { useAuth } from "@/components/auth-context"
 
 type OrderDetail = {
   id: string; orderNo: string; status: string; sampleName: string
@@ -24,8 +25,10 @@ type OrderDetail = {
 export default function OrderDetailPage() {
   const params = useParams()
   const router = useRouter()
+  const { user } = useAuth()
   const [order, setOrder] = useState<OrderDetail | null>(null)
   const [loading, setLoading] = useState(true)
+  const isAdmin = user?.role === "ADMIN" || user?.role === "SUPER_ADMIN"
 
   useEffect(() => {
     fetch(`/api/orders/${params.id}`)
@@ -133,6 +136,7 @@ export default function OrderDetailPage() {
 
           <Separator />
 
+          {isAdmin && (
           <div>
             <h3 className="mb-3 font-semibold">费用明细</h3>
             <div className="space-y-2">
@@ -144,6 +148,7 @@ export default function OrderDetailPage() {
               <div className="flex justify-between font-bold text-lg"><span>应付金额</span><span>{formatCurrency(order.finalAmount)}</span></div>
             </div>
           </div>
+          )}
 
           {order.payments.length > 0 && (
             <>

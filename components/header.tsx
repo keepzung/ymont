@@ -30,6 +30,7 @@ const navItems = [
     ],
   },
   { label: "送检指南", href: "/guide" },
+  { label: "定价下单", href: "/pricing" },
   {
     label: "一站式服务",
     href: "/services",
@@ -39,7 +40,6 @@ const navItems = [
       { label: "一站式矿业技术", href: "/services" },
     ],
   },
-  { label: "合作伙伴", href: "/partners" },
   { label: "关于我们", href: "/about" },
   {
     label: "加入我们",
@@ -49,6 +49,8 @@ const navItems = [
       { label: "招聘信息", href: "/careers" },
     ],
   },
+  { label: "在线咨询", href: "/consulting" },
+  { label: "新闻动态", href: "/news" },
 ]
 
 export function Header() {

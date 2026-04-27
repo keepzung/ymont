@@ -51,6 +51,9 @@ const navItems = [
   },
   { label: "在线咨询", href: "/consulting" },
   { label: "新闻动态", href: "/news" },
+  { label: "常见问题", href: "/faq" },
+  { label: "矿业服务", href: "/mining" },
+  { label: "意见反馈", href: "/feedback" },
 ]
 
 export function Header() {

@@ -29,6 +29,7 @@ const navItems = [
       { label: "物相分析", href: "/services?cat=phase" },
     ],
   },
+  { label: "矿业服务", href: "/mining" },
   { label: "送检指南", href: "/guide" },
   { label: "定价下单", href: "/pricing" },
   {
@@ -52,7 +53,6 @@ const navItems = [
   { label: "在线咨询", href: "/consulting" },
   { label: "新闻动态", href: "/news" },
   { label: "常见问题", href: "/faq" },
-  { label: "矿业服务", href: "/mining" },
   { label: "意见反馈", href: "/feedback" },
 ]
 

@@ -24,27 +24,27 @@ function LoginForm() {
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState(error ? "登录失败，请检查账号密码" : "")
   const [successMsg, setSuccessMsg] = useState("")
-  const [loggedIn, setLoggedIn] = useState(false)
+  const [shouldRedirect, setShouldRedirect] = useState(false)
 
   useEffect(() => {
-    console.log("useSession status:", status, "session:", session)
-    if (session && status === "authenticated" && loggedIn) {
+    if (shouldRedirect && session && status === "authenticated") {
       const userRole = (session.user as any)?.role
-      console.log("Redirecting, role:", userRole)
+      console.log("Doing redirect, role:", userRole)
+      // 使用 window.location 强制跳转
       if (userRole === "ADMIN" || userRole === "SUPER_ADMIN") {
-        router.replace("/admin")
+        window.location.href = "/admin"
       } else {
-        router.replace("/dashboard/orders")
+        window.location.href = "/dashboard/orders"
       }
     }
-  }, [session, status, loggedIn, router])
+  }, [shouldRedirect, session, status])
 
   async function handleEmailLogin(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setErrorMsg("")
     setSuccessMsg("")
-    setLoggedIn(false)
+    setShouldRedirect(false)
 
     if (!email || !password) {
       setErrorMsg("请输入邮箱和密码")
@@ -66,9 +66,8 @@ function LoginForm() {
         setSuccessMsg("")
         setLoading(false)
       } else {
-        setSuccessMsg("登录成功正在跳转...")
-        setLoggedIn(true)
-        router.refresh()
+        setSuccessMsg("登录成功，正在跳转...")
+        setShouldRedirect(true)
       }
     } catch (err) {
       console.error("Login error:", err)
@@ -83,7 +82,7 @@ function LoginForm() {
     setLoading(true)
     setErrorMsg("")
     setSuccessMsg("")
-    setLoggedIn(false)
+    setShouldRedirect(false)
 
     if (!phone || !password) {
       setErrorMsg("请输入手机号和密码")
@@ -106,8 +105,7 @@ function LoginForm() {
         setLoading(false)
       } else {
         setSuccessMsg("登录成功正在跳转...")
-        setLoggedIn(true)
-        router.refresh()
+        setShouldRedirect(true)
       }
     } catch (err) {
       console.error("Login error:", err)

@@ -2,8 +2,8 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
-import { signIn, useSession } from "next-auth/react"
+import { useState, useEffect } from "react"
+import { useAuth } from "@/components/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -13,7 +13,7 @@ import { AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react"
 
 export default function LoginPage() {
   const router = useRouter()
-  const { data: session, status } = useSession()
+  const { user, login, loginWithPhone, loading: authLoading } = useAuth()
   
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
@@ -23,19 +23,15 @@ export default function LoginPage() {
   const [errorMsg, setErrorMsg] = useState("")
   const [successMsg, setSuccessMsg] = useState("")
 
-  // Redirect if already logged in
-  if (status === "authenticated") {
-    const role = (session.user as any)?.role
-    if (role === "ADMIN" || role === "SUPER_ADMIN") {
-      if (typeof window !== "undefined" && window.location.pathname !== "/admin") {
-        window.location.href = "/admin"
-      }
-    } else {
-      if (typeof window !== "undefined" && window.location.pathname !== "/dashboard") {
-        window.location.href = "/dashboard"
+  useEffect(() => {
+    if (!authLoading && user) {
+      if (user.role === "ADMIN" || user.role === "SUPER_ADMIN") {
+        router.push("/admin")
+      } else {
+        router.push("/dashboard")
       }
     }
-  }
+  }, [user, authLoading, router])
 
   async function handleEmailLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -50,19 +46,15 @@ export default function LoginPage() {
     }
 
     setSuccessMsg("正在登录...")
-    const result = await signIn("credentials", {
-      email, password,
-      redirect: false,
-    })
+    const result = await login(email, password)
 
-    if (result?.error) {
-      setErrorMsg("邮箱或密码错误")
+    if (!result.success) {
+      setErrorMsg(result.error || "邮箱或密码错误")
       setSuccessMsg("")
       setLoading(false)
     } else {
       setSuccessMsg("登录成功...")
-      // Force redirect
-      window.location.href = "/admin"
+      router.push("/admin")
     }
   }
 
@@ -79,19 +71,24 @@ export default function LoginPage() {
     }
 
     setSuccessMsg("正在登录...")
-    const result = await signIn("credentials", {
-      phone, password,
-      redirect: false,
-    })
+    const result = await loginWithPhone(phone, password)
 
-    if (result?.error) {
-      setErrorMsg("手机号或密码错误")
+    if (!result.success) {
+      setErrorMsg(result.error || "手机号或密码错误")
       setSuccessMsg("")
       setLoading(false)
     } else {
       setSuccessMsg("登录成功...")
-      window.location.href = "/dashboard"
+      router.push("/dashboard")
     }
+  }
+
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    )
   }
 
   return (
@@ -151,7 +148,7 @@ export default function LoginPage() {
                   <Label htmlFor="phone">手机号</Label>
                   <Input id="phone" type="tel" placeholder="请输入手机号" value={phone} onChange={(e) => setPhone(e.target.value)} required />
                 </div>
-<div className="space-y-2">
+                <div className="space-y-2">
                   <Label htmlFor="phone-password">密码</Label>
                   <div className="relative">
                     <Input id="phone-password" type={showPassword ? "text" : "password"} placeholder="请输入密码" value={password} onChange={(e) => setPassword(e.target.value)} required />

@@ -1,19 +1,19 @@
 "use client"
 
 import Link from "next/link"
-import { useSession } from "next-auth/react"
+import { useAuth } from "@/components/auth-context"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { FileText, FlaskConical, MessageSquare, Plus } from "lucide-react"
 
 export default function DashboardPage() {
-  const { data: session } = useSession()
+  const { user } = useAuth()
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">欢迎回来，{session?.user?.name || "用户"}</h1>
+          <h1 className="text-2xl font-bold">欢迎回来，{user?.name || "用户"}</h1>
           <p className="text-muted-foreground">管理您的检测订单和报告</p>
         </div>
         <Link href="/dashboard/orders/new">

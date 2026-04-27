@@ -5,11 +5,16 @@ export async function GET(req: NextRequest) {
   const token = req.cookies.get("auth-token")?.value
 
   if (!token) {
-    return NextResponse.json({ authenticated: false })
+    return NextResponse.json({ user: null })
   }
 
   try {
-    const [userId] = Buffer.from(token, "base64").toString().split(":")
+    const decoded = Buffer.from(token, "base64").toString()
+    const [userId, role] = decoded.split(":")
+    
+    if (!userId) {
+      return NextResponse.json({ user: null })
+    }
     
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -17,14 +22,20 @@ export async function GET(req: NextRequest) {
     })
 
     if (!user) {
-      return NextResponse.json({ authenticated: false })
+      return NextResponse.json({ user: null })
     }
 
     return NextResponse.json({
-      authenticated: true,
-      user
+      user: {
+        id: user.id,
+        email: user.email,
+        phone: user.phone,
+        name: user.name,
+        role: user.role
+      }
     })
   } catch (error) {
-    return NextResponse.json({ authenticated: false })
+    console.error("Session check error:", error)
+    return NextResponse.json({ user: null })
   }
 }

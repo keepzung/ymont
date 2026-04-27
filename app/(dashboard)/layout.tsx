@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { signOut, useSession } from "next-auth/react"
+import { useAuth } from "@/components/auth-context"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import {
@@ -21,8 +21,12 @@ const sidebarItems = [
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const { data: session } = useSession()
+  const { user, logout } = useAuth()
   const [collapsed, setCollapsed] = useState(false)
+
+  async function handleLogout() {
+    await logout()
+  }
 
   return (
     <div className="flex min-h-screen">
@@ -59,12 +63,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         <Separator />
         <div className="p-2">
-          {!collapsed && session?.user && (
+          {!collapsed && user && (
             <div className="mb-2 px-3 py-2 text-sm">
-              <p className="font-medium truncate">{session.user.name || session.user.email}</p>
+              <p className="font-medium truncate">{user.name || user.email}</p>
             </div>
           )}
-          <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-muted-foreground" onClick={() => signOut({ callbackUrl: "/" })}>
+          <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-muted-foreground" onClick={handleLogout}>
             <LogOut className="h-4 w-4" />
             {!collapsed && "退出登录"}
           </Button>

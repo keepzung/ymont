@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState, useEffect } from "react"
-import { useSession, signOut } from "next-auth/react"
+import { useAuth } from "@/components/auth-context"
 import { Button } from "@/components/ui/button"
 import { Menu, X, Phone, ChevronDown, User, LogOut } from "lucide-react"
 
@@ -60,12 +60,11 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const pathname = usePathname()
-  const { data: session, status } = useSession()
-  const userRole = (session?.user as any)?.role
-  const isAdmin = userRole === "ADMIN" || userRole === "SUPER_ADMIN"
+  const { user, logout, loading } = useAuth()
+  const isAdmin = user?.role === "ADMIN" || user?.role === "SUPER_ADMIN"
 
-  async function handleSignOut() {
-    await signOut({ callbackUrl: "/" })
+  async function handleLogout() {
+    await logout()
   }
 
   return (
@@ -114,16 +113,16 @@ export function Header() {
               18600104701
             </a>
             
-            {status === "loading" ? (
+            {loading ? (
               <Button variant="outline" size="sm" disabled>加载中...</Button>
-            ) : session ? (
+            ) : user ? (
               <div className="relative">
                 <button 
                   className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm"
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
                 >
                   <User className="h-4 w-4" />
-                  {session.user?.name || session.user?.email}
+                  {user.name || user.email}
                 </button>
                 {userMenuOpen && (
                   <div className="absolute right-0 top-full z-50 mt-1 w-40 rounded-lg border border-border bg-card py-2 shadow-lg">
@@ -135,7 +134,7 @@ export function Header() {
                       {isAdmin ? "管理后台" : "我的订单"}
                     </Link>
                     <button 
-                      onClick={handleSignOut}
+                      onClick={handleLogout}
                       className="flex w-full items-center gap-2 px-4 py-2 text-sm text-left hover:bg-muted"
                     >
                       <LogOut className="h-4 w-4" />
@@ -197,9 +196,9 @@ export function Header() {
               </div>
             ))}
             <div className="flex gap-2 pt-4">
-              {session ? (
+              {user ? (
                 <button 
-                  onClick={handleSignOut}
+                  onClick={handleLogout}
                   className="flex-1 rounded-md border px-3 py-2 text-center"
                 >
                   退出登录

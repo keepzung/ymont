@@ -1,6 +1,6 @@
 "use client"
 
-import { useSession } from "next-auth/react"
+import { useAuth } from "@/components/auth-context"
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -10,11 +10,10 @@ import { USER_ROLE_MAP } from "@/lib/constants"
 import { Save } from "lucide-react"
 
 export default function ProfilePage() {
-  const { data: session, update } = useSession()
+  const { user } = useAuth()
   const [form, setForm] = useState({
-    name: session?.user?.name || "",
-    phone: "",
-    company: "",
+    name: user?.name || "",
+    phone: user?.phone || "",
   })
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -30,7 +29,6 @@ export default function ProfilePage() {
       })
       if (res.ok) {
         setSaved(true)
-        update()
       }
     } catch {}
     setSaving(false)
@@ -46,11 +44,11 @@ export default function ProfilePage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>邮箱</Label>
-              <Input value={session?.user?.email || ""} disabled />
+              <Input value={user?.email || ""} disabled />
             </div>
             <div className="space-y-2">
               <Label>用户类型</Label>
-              <Input value={USER_ROLE_MAP[(session?.user as any)?.role] || "个人用户"} disabled />
+              <Input value={USER_ROLE_MAP[user?.role] || "个人用户"} disabled />
             </div>
             <div className="space-y-2">
               <Label htmlFor="name">姓名</Label>
@@ -59,10 +57,6 @@ export default function ProfilePage() {
             <div className="space-y-2">
               <Label htmlFor="phone">手机号</Label>
               <Input id="phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="company">公司/机构</Label>
-              <Input id="company" value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} />
             </div>
           </div>
           <div className="flex items-center gap-4">

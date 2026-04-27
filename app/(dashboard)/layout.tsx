@@ -33,7 +33,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <aside className={`${collapsed ? "w-16" : "w-60"} flex flex-col border-r border-border bg-card transition-all duration-200`}>
         <div className="flex h-16 items-center justify-between border-b px-4">
           {!collapsed && (
-            <Link href="/" className="flex items-center gap-2">
+            <Link href="/" className="flex items-center gap-2 whitespace-nowrap">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
                 <span className="text-sm font-bold text-primary-foreground">W</span>
               </div>

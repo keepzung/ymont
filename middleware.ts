@@ -21,9 +21,8 @@ export async function middleware(request: NextRequest) {
     try {
       const token = await getToken({ req: request, secret: process.env.AUTH_SECRET })
       
-      console.log("Middleware token:", token)
-      
       if (!token) {
+        console.log("No token found, redirecting to login")
         const loginUrl = new URL("/login", request.url)
         loginUrl.searchParams.set("callbackUrl", pathname)
         return NextResponse.redirect(loginUrl)
@@ -31,8 +30,8 @@ export async function middleware(request: NextRequest) {
 
       if (pathname.startsWith("/admin")) {
         const userRole = token.role
-        console.log("Middleware role:", userRole)
         if (userRole !== "ADMIN" && userRole !== "SUPER_ADMIN") {
+          console.log("User role not admin:", userRole)
           return NextResponse.redirect(new URL("/", request.url))
         }
       }

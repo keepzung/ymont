@@ -18,9 +18,11 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(loginUrl)
     }
 
-    if (pathname.startsWith("/admin") && token.role !== "ADMIN") {
+    if (pathname.startsWith("/admin")) {
+    if (token.role !== "ADMIN" && token.role !== "SUPER_ADMIN") {
       return NextResponse.redirect(new URL("/", request.url))
     }
+  }
   }
 
   return NextResponse.next()

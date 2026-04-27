@@ -7,7 +7,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth()
-  if (!session?.user || (session.user as any).role !== "ADMIN") {
+  const userRole = (session?.user as any)?.role
+  
+  if (!session?.user || (userRole !== "ADMIN" && userRole !== "SUPER_ADMIN")) {
     return NextResponse.json({ error: "无权限" }, { status: 403 })
   }
 
@@ -27,39 +29,35 @@ export async function GET(
   return NextResponse.json(order)
 }
 
-export async function PUT(
+export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth()
-  if (!session?.user || (session.user as any).role !== "ADMIN") {
+  const userRole = (session?.user as any)?.role
+  
+  if (!session?.user || (userRole !== "ADMIN" && userRole !== "SUPER_ADMIN")) {
     return NextResponse.json({ error: "无权限" }, { status: 403 })
   }
 
   const { id } = await params
   const body = await request.json()
-  const { status, fileUrl, title } = body
+  const { status, adminRemark } = body
+  const adminId = session.user.id
 
+  const updateData: any = {}
   if (status) {
-    const order = await prisma.order.update({
-      where: { id },
-      data: { status },
-    })
-    return NextResponse.json(order)
+    updateData.status = status
+  }
+  if (adminRemark !== undefined) {
+    updateData.adminRemark = adminRemark
+    updateData.adminUpdatedBy = adminId
   }
 
-  if (fileUrl && title) {
-    const report = await prisma.report.create({
-      data: {
-        orderId: id,
-        userId: (await prisma.order.findUnique({ where: { id } }))!.userId,
-        title,
-        fileUrl,
-        status: "READY",
-      },
-    })
-    return NextResponse.json(report)
-  }
+  const order = await prisma.order.update({
+    where: { id },
+    data: updateData,
+  })
 
-  return NextResponse.json({ error: "无效请求" }, { status: 400 })
+  return NextResponse.json(order)
 }

@@ -13,6 +13,7 @@ enum UserRole {
   ENTERPRISE
   RESEARCH
   ADMIN
+  SUPER_ADMIN
 }
 
 enum OrderStatus {
@@ -172,6 +173,8 @@ model Order {
   discountAmount Float       @default(0)
   finalAmount   Float
   remark        String?
+  adminRemark  String?
+  adminUpdatedBy String?
   sampleName    String
   sampleType    String?
   sampleWeight  String?

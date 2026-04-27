@@ -38,7 +38,12 @@ function LoginForm() {
       setErrorMsg("邮箱或密码错误")
       setLoading(false)
     } else {
-      router.push(callbackUrl)
+      const userRole = (result as any)?.role
+      if (userRole === "ADMIN" || userRole === "SUPER_ADMIN") {
+        router.push("/admin")
+      } else {
+        router.push("/dashboard/orders")
+      }
       router.refresh()
     }
   }
@@ -57,7 +62,7 @@ function LoginForm() {
       setErrorMsg("手机号或密码错误")
       setLoading(false)
     } else {
-      router.push(callbackUrl)
+      router.push("/dashboard/orders")
       router.refresh()
     }
   }

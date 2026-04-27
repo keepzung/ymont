@@ -7,13 +7,15 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import {
   LayoutDashboard, FileText, FlaskConical, User, MessageSquare,
-  LogOut, ChevronLeft, ChevronRight,
+  LogOut, ChevronLeft, ChevronRight, Calendar, Truck,
 } from "lucide-react"
 import { useState } from "react"
 
 const sidebarItems = [
   { label: "概览", href: "/dashboard", icon: LayoutDashboard },
   { label: "我的订单", href: "/dashboard/orders", icon: FileText },
+  { label: "预约管理", href: "/dashboard/bookings", icon: Calendar },
+  { label: "上门取样", href: "/dashboard/pickups", icon: Truck },
   { label: "检测报告", href: "/dashboard/reports", icon: FlaskConical },
   { label: "在线咨询", href: "/dashboard/consulting", icon: MessageSquare },
   { label: "个人信息", href: "/dashboard/profile", icon: User },

@@ -84,6 +84,7 @@ model User {
   reports        Report[]
   pickupRequests PickupRequest[]
   feedbacks     Feedback[]
+  bookings      Booking[]
 
   @@map("users")
 }
@@ -342,6 +343,8 @@ enum BookingStatus {
 
 model Booking {
   id          String        @id @default(cuid())
+  userId     String?
+  user       User?          @relation(fields: [userId], references: [id])
   name        String
   company     String?
   phone      String

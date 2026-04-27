@@ -2,21 +2,21 @@
 
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import { Suspense, useState } from "react"
-import { signIn } from "next-auth/react"
+import { Suspense, useState, useEffect } from "react"
+import { signIn, useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { AlertCircle, CheckCircle, Eye, EyeOff } from "lucide-react"
-import { getSession } from "next-auth/react"
+import { AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react"
 
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard"
   const error = searchParams.get("error")
+  const { data: session, status } = useSession()
 
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
@@ -24,6 +24,18 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState(error ? "登录失败，请检查账号密码" : "")
+
+  useEffect(() => {
+    if (status === "authenticated" && session) {
+      const userRole = (session.user as any)?.role
+      console.log("Session role:", userRole)
+      if (userRole === "ADMIN" || userRole === "SUPER_ADMIN") {
+        router.push("/admin")
+      } else {
+        router.push("/dashboard/orders")
+      }
+    }
+  }, [session, status, router])
 
   async function handleEmailLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -47,21 +59,7 @@ function LoginForm() {
       if (result?.error) {
         setErrorMsg("邮箱或密码错误，请检查后重试")
         setLoading(false)
-        return
       }
-
-      const session = await getSession()
-      console.log("Session after login:", session)
-      
-      const userRole = (session?.user as any)?.role
-      console.log("User role:", userRole)
-
-      if (userRole === "ADMIN" || userRole === "SUPER_ADMIN") {
-        router.push("/admin")
-      } else {
-        router.push("/dashboard/orders")
-      }
-      router.refresh()
     } catch (err) {
       console.error("Login error:", err)
       setErrorMsg("登录出错，请稍后重试")
@@ -91,11 +89,7 @@ function LoginForm() {
       if (result?.error) {
         setErrorMsg("手机号或密码错误，请检查后重试")
         setLoading(false)
-        return
       }
-
-      router.push("/dashboard/orders")
-      router.refresh()
     } catch (err) {
       console.error("Login error:", err)
       setErrorMsg("登录出错，请稍后重试")
@@ -120,6 +114,12 @@ function LoginForm() {
           <div className="mb-4 flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
             <AlertCircle className="h-4 w-4 shrink-0" />
             {errorMsg}
+          </div>
+        )}
+        {loading && (
+          <div className="mb-4 flex items-center gap-2 rounded-lg bg-primary/10 p-3 text-sm">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            正在登录...
           </div>
         )}
         <Tabs defaultValue="email" className="w-full">
@@ -175,10 +175,10 @@ function LoginForm() {
           <Link href="/register" className="font-medium text-primary hover:underline">
              立即注册
            </Link>
-         </p>
-       </CardFooter>
-     </Card>
-   )
+        </p>
+      </CardFooter>
+    </Card>
+  )
 }
 
 export default function LoginPage() {

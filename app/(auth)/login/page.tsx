@@ -24,25 +24,27 @@ function LoginForm() {
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState(error ? "登录失败，请检查账号密码" : "")
   const [successMsg, setSuccessMsg] = useState("")
+  const [loggedIn, setLoggedIn] = useState(false)
 
   useEffect(() => {
-    console.log("Session check:", status, session)
-    if (status === "authenticated" && session) {
+    console.log("useSession status:", status, "session:", session)
+    if (session && status === "authenticated" && loggedIn) {
       const userRole = (session.user as any)?.role
-      console.log("Logged in, role:", userRole)
+      console.log("Redirecting, role:", userRole)
       if (userRole === "ADMIN" || userRole === "SUPER_ADMIN") {
-        router.push("/admin")
+        router.replace("/admin")
       } else {
-        router.push("/dashboard/orders")
+        router.replace("/dashboard/orders")
       }
     }
-  }, [session, status, router])
+  }, [session, status, loggedIn, router])
 
   async function handleEmailLogin(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setErrorMsg("")
     setSuccessMsg("")
+    setLoggedIn(false)
 
     if (!email || !password) {
       setErrorMsg("请输入邮箱和密码")
@@ -64,7 +66,8 @@ function LoginForm() {
         setSuccessMsg("")
         setLoading(false)
       } else {
-        setSuccessMsg("登录成功，正在跳转...")
+        setSuccessMsg("登录成功正在跳转...")
+        setLoggedIn(true)
         router.refresh()
       }
     } catch (err) {
@@ -80,6 +83,7 @@ function LoginForm() {
     setLoading(true)
     setErrorMsg("")
     setSuccessMsg("")
+    setLoggedIn(false)
 
     if (!phone || !password) {
       setErrorMsg("请输入手机号和密码")
@@ -102,6 +106,7 @@ function LoginForm() {
         setLoading(false)
       } else {
         setSuccessMsg("登录成功正在跳转...")
+        setLoggedIn(true)
         router.refresh()
       }
     } catch (err) {
@@ -133,7 +138,7 @@ function LoginForm() {
         )}
         {successMsg && (
           <div className="mb-4 flex items-center gap-2 rounded-lg bg-green-500/10 p-3 text-sm text-green-600">
-            <Loader2 className="h-4 w-4 animate-spin" />
+            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
             {successMsg}
           </div>
         )}

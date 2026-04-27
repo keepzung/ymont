@@ -83,6 +83,7 @@ model User {
   coupons        UserCoupon[]
   reports        Report[]
   pickupRequests PickupRequest[]
+  feedbacks     Feedback[]
 
   @@map("users")
 }
@@ -354,6 +355,31 @@ model Booking {
   updatedAt   DateTime      @updatedAt
 
   @@map("bookings")
+}
+
+enum FeedbackStatus {
+  PENDING
+  READ
+  REPLIED
+  RESOLVED
+}
+
+model Feedback {
+  id          String         @id @default(cuid())
+  userId     String?
+  user       User?          @relation(fields: [userId], references: [id])
+  type       String         // complaint(投诉), suggestion(建议), bug(bug反馈), other(其他)
+  title       String
+  content    String
+  contact    String?        // 联系方式：手机或邮箱
+  status     FeedbackStatus @default(PENDING)
+  reply      String?        // 回复内容
+  repliedAt  DateTime?      // 回复时间
+  replyBy    String?       // 回复人ID
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@map("feedbacks")
 }
 
 model PickupRequest {

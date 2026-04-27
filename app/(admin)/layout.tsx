@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import {
   LayoutDashboard, FileText, Users, Newspaper, FlaskConical,
-  MessageSquare, LogOut, Calendar, Truck,
+  MessageSquare, LogOut, Calendar, Truck, MessageCircle,
 } from "lucide-react"
 
 const adminItems = [
@@ -20,6 +20,7 @@ const adminItems = [
   { label: "检测项目", href: "/admin/services", icon: FlaskConical },
   { label: "报告管理", href: "/admin/reports", icon: FlaskConical },
   { label: "咨询管理", href: "/admin/consultations", icon: MessageSquare },
+  { label: "意见反馈", href: "/admin/feedback", icon: MessageCircle },
   { label: "新闻管理", href: "/admin/news", icon: Newspaper },
 ]
 

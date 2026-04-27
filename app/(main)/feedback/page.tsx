@@ -1,12 +1,60 @@
+"use client"
+
+import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Mail, Phone, Send } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Mail, Phone, Send, CheckCircle, Loader2, MessageSquare } from "lucide-react"
 
 export default function FeedbackPage() {
+  const [form, setForm] = useState({
+    type: "other",
+    title: "",
+    content: "",
+    contact: "",
+  })
+  const [submitting, setSubmitting] = useState(false)
+  const [success, setSuccess] = useState(false)
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!form.title || !form.content) return
+    
+    setSubmitting(true)
+    try {
+      const res = await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      })
+      
+      if (res.ok) {
+        setSuccess(true)
+        setForm({ type: "other", title: "", content: "", contact: "" })
+      }
+    } catch {}
+    setSubmitting(false)
+  }
+
+  if (success) {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-12">
+        <Card>
+          <CardContent className="py-12 text-center">
+            <CheckCircle className="mx-auto mb-4 h-16 w-16 text-green-500" />
+            <h2 className="text-2xl font-bold text-green-600">提交成功</h2>
+            <p className="mt-2 text-muted-foreground">感谢您的反馈，我们会尽快处理</p>
+            <Button className="mt-4" onClick={() => setSuccess(false)}>再次提交</Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
       <div className="mb-10 text-center">
@@ -17,32 +65,59 @@ export default function FeedbackPage() {
 
       <Card>
         <CardHeader><CardTitle>提交反馈</CardTitle></CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">姓名</Label>
-              <Input id="name" placeholder="您的姓名" />
+              <Label htmlFor="type">反馈类型</Label>
+              <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="complaint">投诉</SelectItem>
+                  <SelectItem value="suggestion">建议</SelectItem>
+                  <SelectItem value="bug">Bug反馈</SelectItem>
+                  <SelectItem value="other">其他</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+            
             <div className="space-y-2">
-              <Label htmlFor="phone">联系电话</Label>
-              <Input id="phone" placeholder="手机号" />
+              <Label htmlFor="title">标题</Label>
+              <Input 
+                id="title" 
+                placeholder="简要描述" 
+                value={form.title} 
+                onChange={(e) => setForm({ ...form, title: e.target.value })} 
+                required 
+              />
             </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="email">邮箱</Label>
-            <Input id="email" type="email" placeholder="邮箱" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="type">反馈类型</Label>
-            <Input id="type" placeholder="投诉/建议/其他" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="content">详细内容</Label>
-            <Textarea id="content" placeholder="请详细描述您的问题或建议" className="min-h-[120px]" />
-          </div>
-          <Button className="w-full">
-            <Send className="mr-2 h-4 w-4" />提交反馈
-          </Button>
+            
+            <div className="space-y-2">
+              <Label htmlFor="content">详细内容</Label>
+              <Textarea 
+                id="content" 
+                placeholder="请详细描述您的问题或建议" 
+                className="min-h-[120px]"
+                value={form.content}
+                onChange={(e) => setForm({ ...form, content: e.target.value })} 
+                required 
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="contact">联系方式（选填）</Label>
+              <Input 
+                id="contact" 
+                placeholder="手机号或邮箱，便于我们回复您" 
+                value={form.contact}
+                onChange={(e) => setForm({ ...form, contact: e.target.value })} 
+              />
+            </div>
+            
+            <Button type="submit" className="w-full" disabled={submitting}>
+              {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+              {submitting ? "提交中..." : "提交反馈"}
+            </Button>
+          </form>
         </CardContent>
       </Card>
 

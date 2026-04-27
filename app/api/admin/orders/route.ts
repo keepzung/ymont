@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
     where.OR = [
       { orderNo: { contains: search } },
       { sampleName: { contains: search } },
-      { user: { email: { contains: search } },
+      { user: { email: { contains: search } } },
     ]
   }
   

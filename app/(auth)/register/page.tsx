@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { AlertCircle, Eye, EyeOff } from "lucide-react"
+import { AlertCircle, CheckCircle, Eye, EyeOff } from "lucide-react"
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -19,6 +19,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState("")
+  const [successMsg, setSuccessMsg] = useState("")
 
   function updateForm(key: string, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -27,6 +28,7 @@ export default function RegisterPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setErrorMsg("")
+    setSuccessMsg("")
 
     if (!form.name) {
       setErrorMsg("请填写姓名")
@@ -60,8 +62,8 @@ export default function RegisterPage() {
         return
       }
 
-      alert("注册成功！请登录")
-      router.push("/login")
+      setSuccessMsg("注册成功！正在跳转到登录页面...")
+      setTimeout(() => router.push("/login"), 1500)
     } catch (err) {
       console.error("Register error:", err)
       setErrorMsg("网络错误，请检查网络后重试")
@@ -87,6 +89,12 @@ export default function RegisterPage() {
           <div className="mb-4 flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
             <AlertCircle className="h-4 w-4 shrink-0" />
             {errorMsg}
+          </div>
+        )}
+        {successMsg && (
+          <div className="mb-4 flex items-center gap-2 rounded-lg bg-green-500/10 p-3 text-sm text-green-600">
+            <CheckCircle className="h-4 w-4 shrink-0" />
+            {successMsg}
           </div>
         )}
         <form onSubmit={handleSubmit} className="space-y-4">

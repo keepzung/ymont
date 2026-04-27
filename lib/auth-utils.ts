@@ -1,36 +1,47 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 
+let userCache: { id: string; email: string; phone?: string; name?: string; role: string } | null = null
+let cacheTime = 0
+
 export async function getUserFromRequest(req: NextRequest) {
+  const now = Date.now()
+  
+  // Cache user for 30 seconds to avoid repeated DB queries
+  if (userCache && now - cacheTime < 30000) {
+    return userCache
+  }
+  
   const token = req.cookies.get("auth-token")?.value
   
-  if (!token) return null
+  if (!token) {
+    userCache = null
+    return null
+  }
   
   try {
     const decoded = Buffer.from(token, "base64").toString()
-    const [userId, role] = decoded.split(":")
+    const [userId] = decoded.split(":")
     
-    if (!userId) return null
+    if (!userId) {
+      userCache = null
+      return null
+    }
     
-    const user = await prisma.user.findUnique({
+    userCache = await prisma.user.findUnique({
       where: { id: userId },
       select: { id: true, name: true, email: true, phone: true, role: true }
-    })
+    }) as any
     
-    return user
+    cacheTime = now
+    return userCache
   } catch {
+    userCache = null
     return null
   }
 }
 
-export function requireAuth(req: NextRequest) {
-  return async () => {
-    const user = await getUserFromRequest(req)
-    
-    if (!user) {
-      return NextResponse.json({ error: "请先登录" }, { status: 401 })
-    }
-    
-    return null
-  }
+export function clearUserCache() {
+  userCache = null
+  cacheTime = 0
 }

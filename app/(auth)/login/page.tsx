@@ -53,8 +53,9 @@ export default function LoginPage() {
       setSuccessMsg("")
       setLoading(false)
     } else {
+      const target = user?.role === "ADMIN" || user?.role === "SUPER_ADMIN" ? "/admin" : "/dashboard"
       setSuccessMsg("登录成功...")
-      router.push("/admin")
+      router.push(target)
     }
   }
 
@@ -78,8 +79,9 @@ export default function LoginPage() {
       setSuccessMsg("")
       setLoading(false)
     } else {
+      const target = user?.role === "ADMIN" || user?.role === "SUPER_ADMIN" ? "/admin" : "/dashboard"
       setSuccessMsg("登录成功...")
-      router.push("/dashboard")
+      router.push(target)
     }
   }
 

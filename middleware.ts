@@ -21,7 +21,40 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Protected pages - just let them through, they'll check auth themselves
+  // Check auth token
+  const token = request.cookies.get("auth-token")?.value
+  let userRole = null
+  
+  if (token) {
+    try {
+      const decoded = Buffer.from(token, "base64").toString()
+      const [, role] = decoded.split(":")
+      userRole = role
+    } catch {
+      userRole = null
+    }
+  }
+
+  // Admin routes protection
+  if (pathname.startsWith("/admin")) {
+    if (!userRole || (userRole !== "ADMIN" && userRole !== "SUPER_ADMIN")) {
+      return NextResponse.redirect(new URL("/login", request.url))
+    }
+    return NextResponse.next()
+  }
+
+  // User dashboard routes protection
+  if (pathname.startsWith("/dashboard")) {
+    if (!userRole) {
+      return NextResponse.redirect(new URL("/login", request.url))
+    }
+    // Admins should go to admin, not dashboard
+    if (userRole === "ADMIN" || userRole === "SUPER_ADMIN") {
+      return NextResponse.redirect(new URL("/admin", request.url))
+    }
+    return NextResponse.next()
+  }
+
   return NextResponse.next()
 }
 

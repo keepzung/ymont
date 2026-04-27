@@ -1,10 +1,11 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { useAuth } from "@/components/auth-context"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
+import { Loader2 } from "lucide-react"
 import {
   LayoutDashboard, FileText, FlaskConical, User, MessageSquare,
   LogOut, ChevronLeft, ChevronRight, Calendar, Truck,
@@ -22,9 +23,36 @@ const sidebarItems = [
 ]
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const router = useRouter()
   const pathname = usePathname()
-  const { user, logout } = useAuth()
+  const { user, logout, loading } = useAuth()
   const [collapsed, setCollapsed] = useState(false)
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    )
+  }
+
+  if (!user) {
+    router.push("/login")
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    )
+  }
+
+  if (user.role === "ADMIN" || user.role === "SUPER_ADMIN") {
+    router.push("/admin")
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    )
+  }
 
   async function handleLogout() {
     await logout()

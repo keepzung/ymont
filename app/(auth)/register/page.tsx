@@ -28,12 +28,20 @@ export default function RegisterPage() {
     e.preventDefault()
     setErrorMsg("")
 
+    if (!form.name) {
+      setErrorMsg("请填写姓名")
+      return
+    }
+    if (!form.email && !form.phone) {
+      setErrorMsg("请填写邮箱或手机号，至少填写一个")
+      return
+    }
     if (form.password !== form.confirmPassword) {
-      setErrorMsg("两次密码不一致")
+      setErrorMsg("两次输入的密码不一致")
       return
     }
     if (form.password.length < 6) {
-      setErrorMsg("密码至少6位")
+      setErrorMsg("密码至少需要6位")
       return
     }
 
@@ -45,15 +53,18 @@ export default function RegisterPage() {
         body: JSON.stringify(form),
       })
       const data = await res.json()
+      console.log("Register response:", res.status, data)
 
       if (!res.ok) {
-        setErrorMsg(data.error?.fieldErrors ? Object.values(data.error.fieldErrors).flat().join(", ") : data.error || "注册失败")
+        setErrorMsg(data.error || "注册失败，请检查信息是否填写正确")
         return
       }
 
-      router.push("/login?registered=1")
-    } catch {
-      setErrorMsg("网络错误，请重试")
+      alert("注册成功！请登录")
+      router.push("/login")
+    } catch (err) {
+      console.error("Register error:", err)
+      setErrorMsg("网络错误，请检查网络后重试")
     } finally {
       setLoading(false)
     }

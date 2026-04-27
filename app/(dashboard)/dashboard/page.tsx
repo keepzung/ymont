@@ -5,9 +5,38 @@ import { useAuth } from "@/components/auth-context"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { FileText, FlaskConical, MessageSquare, Plus } from "lucide-react"
+import { useEffect, useState } from "react"
 
 export default function DashboardPage() {
   const { user } = useAuth()
+  const [stats, setStats] = useState({ orders: 0, reports: 0, consultations: 0 })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        const [ordersRes, reportsRes, consultationsRes] = await Promise.all([
+          fetch("/api/orders"),
+          fetch("/api/reports"),
+          fetch("/api/consultations"),
+        ])
+        const [orders, reports, consultations] = await Promise.all([
+          ordersRes.json(),
+          reportsRes.json(),
+          consultationsRes.json(),
+        ])
+        const activeOrders = Array.isArray(orders) ? orders.filter((o: any) => !["COMPLETED", "CANCELLED", "REFUNDED"].includes(o.status)).length : 0
+        const activeReports = Array.isArray(reports) ? reports.filter((r: any) => r.status === "READY").length : 0
+        const activeConsultations = Array.isArray(consultations) ? consultations.length : 0
+        setStats({ orders: activeOrders, reports: activeReports, consultations: activeConsultations })
+      } catch (e) {
+        console.error(e)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchStats()
+  }, [])
 
   return (
     <div className="space-y-6">
@@ -28,8 +57,8 @@ export default function DashboardPage() {
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">暂无进行中的订单</p>
+            <div className="text-2xl font-bold">{loading ? "-" : stats.orders}</div>
+            <p className="text-xs text-muted-foreground">{stats.orders > 0 ? `${stats.orders}个进行中的订单` : "暂无进行中的订单"}</p>
           </CardContent>
         </Card>
         <Card>
@@ -38,8 +67,8 @@ export default function DashboardPage() {
             <FlaskConical className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">暂无报告</p>
+            <div className="text-2xl font-bold">{loading ? "-" : stats.reports}</div>
+            <p className="text-xs text-muted-foreground">{stats.reports > 0 ? `${stats.reports}份可下载` : "暂无报告"}</p>
           </CardContent>
         </Card>
         <Card>
@@ -48,8 +77,8 @@ export default function DashboardPage() {
             <MessageSquare className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">暂无咨询</p>
+            <div className="text-2xl font-bold">{loading ? "-" : stats.consultations}</div>
+            <p className="text-xs text-muted-foreground">{stats.consultations > 0 ? `${stats.consultations}条咨询` : "暂无咨询"}</p>
           </CardContent>
         </Card>
       </div>

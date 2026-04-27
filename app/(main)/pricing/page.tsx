@@ -113,11 +113,7 @@ export default function PricingPage() {
                         {item.turnaround && (
                           <p className="text-xs text-muted-foreground">周期：{item.turnaround}</p>
                         )}
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold text-primary">¥{item.price}</p>
-                        <p className="text-xs text-muted-foreground">/{item.unit}</p>
-                        {isSelected && <Check className="ml-auto mt-1 h-5 w-5 text-primary" />}
+                        {isSelected && <Check className="mt-1 h-5 w-5 text-primary" />}
                       </div>
                     </button>
                   )

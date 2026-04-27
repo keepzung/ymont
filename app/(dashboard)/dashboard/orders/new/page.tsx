@@ -157,7 +157,6 @@ export default function NewOrderPage() {
                               <p className="text-xs text-muted-foreground">{item.instrument}</p>
                             </div>
                           </div>
-                          <span className="font-medium text-sm">{formatCurrency(item.price)}</span>
                         </button>
                       )
                     })}
@@ -174,9 +173,8 @@ export default function NewOrderPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 {services.filter((s) => selected.has(s.id)).map((s) => (
-                  <div key={s.id} className="flex justify-between text-sm">
+                  <div key={s.id} className="text-sm">
                     <span className="text-muted-foreground">{s.name}</span>
-                    <span>{formatCurrency(s.price)}</span>
                   </div>
                 ))}
                 {selected.size === 0 && (
@@ -184,15 +182,6 @@ export default function NewOrderPage() {
                 )}
               </div>
               <Separator />
-              <div className="space-y-2">
-                <Label htmlFor="couponCode">优惠券</Label>
-                <Input id="couponCode" placeholder="输入优惠码" value={form.couponCode} onChange={(e) => setForm({ ...form, couponCode: e.target.value })} />
-              </div>
-              <Separator />
-              <div className="flex justify-between font-bold text-lg">
-                <span>合计</span>
-                <span>{formatCurrency(totalAmount)}</span>
-              </div>
               <Button className="w-full" size="lg" disabled={selected.size === 0 || loading} onClick={handleSubmit}>
                 {loading ? "提交中..." : "提交订单"}
               </Button>

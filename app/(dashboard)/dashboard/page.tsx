@@ -65,10 +65,10 @@ export default function DashboardPage() {
               <span>新建检测订单</span>
             </Button>
           </Link>
-          <Link href="/pricing">
+          <Link href="/services">
             <Button variant="outline" className="w-full h-20 flex-col gap-2">
               <FileText className="h-5 w-5" />
-              <span>查询检测价格</span>
+              <span>检测服务</span>
             </Button>
           </Link>
           <Link href="/guide">

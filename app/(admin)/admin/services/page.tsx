@@ -193,13 +193,10 @@ export default function AdminServicesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>编号</TableHead>
-                <TableHead>项目名称</TableHead>
+                <TableHead>项目</TableHead>
                 <TableHead>分类</TableHead>
                 <TableHead>仪器</TableHead>
-                <TableHead>价格</TableHead>
                 <TableHead>周期</TableHead>
-                <TableHead>状态</TableHead>
                 <TableHead>操作</TableHead>
               </TableRow>
             </TableHeader>
@@ -213,11 +210,7 @@ export default function AdminServicesPage() {
                     <TableCell className="font-medium">{s.name}</TableCell>
                     <TableCell>{s.category?.name}</TableCell>
                     <TableCell>{s.instrument}</TableCell>
-                    <TableCell>¥{s.price}/{s.unit}</TableCell>
                     <TableCell>{s.turnaround || "-"}</TableCell>
-                    <TableCell>
-                      <Badge variant={s.isActive ? "default" : "secondary"}>{s.isActive ? "启用" : "停用"}</Badge>
-                    </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
                         <Button variant="ghost" size="sm" onClick={() => openEdit(s)}><Pencil className="h-4 w-4" /></Button>

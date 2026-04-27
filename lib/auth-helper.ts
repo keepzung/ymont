@@ -1,21 +1,21 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 
-let cachedUser: { id: string; email: string; phone?: string; name?: string; role: string } | null = null
+let userCache: { id: string; email: string; phone?: string; name?: string; role: string } | null = null
 let cacheTime = 0
+const CACHE_DURATION = 10000 // 10 seconds - reduced for data freshness
 
 export async function getUserFromRequest(req: NextRequest) {
   const now = Date.now()
   
-  // Cache user for 30 seconds to avoid repeated DB queries
-  if (cachedUser && now - cacheTime < 30000) {
-    return cachedUser
+  if (userCache && now - cacheTime < CACHE_DURATION) {
+    return userCache
   }
   
   const token = req.cookies.get("auth-token")?.value
   
   if (!token) {
-    cachedUser = null
+    userCache = null
     return null
   }
   
@@ -24,26 +24,25 @@ export async function getUserFromRequest(req: NextRequest) {
     const [userId] = decoded.split(":")
     
     if (!userId) {
-      cachedUser = null
+      userCache = null
       return null
     }
     
-    // Use cache for user data (update every 30 seconds)
-    cachedUser = await prisma.user.findUnique({
+    userCache = await prisma.user.findUnique({
       where: { id: userId },
       select: { id: true, name: true, email: true, phone: true, role: true }
     }) as any
     
     cacheTime = now
-    return cachedUser
+    return userCache
   } catch {
-    cachedUser = null
+    userCache = null
     return null
   }
 }
 
 export function clearUserCache() {
-  cachedUser = null
+  userCache = null
   cacheTime = 0
 }
 
@@ -71,19 +70,4 @@ export function requireRole(allowedRoles: string[]) {
 
 export function requireAdmin(req: NextRequest) {
   return requireRole(["ADMIN", "SUPER_ADMIN"])(req)
-}
-
-export function requireAuth(req: NextRequest) {
-  return async function(): Promise<{user: any, error: NextResponse | null}> {
-    const user = await getUserFromRequest(req)
-    
-    if (!user) {
-      return { 
-        user: null, 
-        error: NextResponse.json({ error: "请先登录" }, { status: 401 }) 
-      }
-    }
-    
-    return { user, error: null }
-  }
 }

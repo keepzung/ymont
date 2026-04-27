@@ -3,12 +3,12 @@ import { prisma } from "@/lib/db"
 
 let userCache: { id: string; email: string; phone?: string; name?: string; role: string } | null = null
 let cacheTime = 0
+const CACHE_DURATION = 10000 // 10 seconds - reduced for data freshness
 
 export async function getUserFromRequest(req: NextRequest) {
   const now = Date.now()
   
-  // Cache user for 30 seconds to avoid repeated DB queries
-  if (userCache && now - cacheTime < 30000) {
+  if (userCache && now - cacheTime < CACHE_DURATION) {
     return userCache
   }
   

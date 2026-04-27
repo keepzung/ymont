@@ -38,5 +38,5 @@ export async function GET(req: NextRequest) {
     take: 100,
   })
 
-  return NextResponse.json({ orders })
+  return NextResponse.json(orders)
 }

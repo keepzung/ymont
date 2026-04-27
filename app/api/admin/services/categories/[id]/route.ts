@@ -1,16 +1,33 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await auth()
-  const userRole = (session?.user as any)?.role
+async function getUserFromRequest(req: NextRequest) {
+  const token = req.cookies.get("auth-token")?.value
   
-  if (!session?.user || (userRole !== "ADMIN" && userRole !== "SUPER_ADMIN")) {
-    return NextResponse.json({ error: "无权限" }, { status: 403 })
+  if (!token) return null
+  
+  try {
+    const decoded = Buffer.from(token, "base64").toString()
+    const [userId, role] = decoded.split(":")
+    
+    if (!userId) return null
+    
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, name: true, email: true, phone: true, role: true }
+    })
+    
+    return user
+  } catch {
+    return null
+  }
+}
+
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const user = await getUserFromRequest(req)
+  
+  if (!user || (user.role !== "ADMIN" && user.role !== "SUPER_ADMIN")) {
+    return NextResponse.json({ error: "无权限访问" }, { status: 403 })
   }
 
   const { id } = await params
@@ -24,15 +41,11 @@ export async function GET(
   return NextResponse.json(category)
 }
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await auth()
-  const userRole = (session?.user as any)?.role
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const user = await getUserFromRequest(req)
   
-  if (!session?.user || (userRole !== "ADMIN" && userRole !== "SUPER_ADMIN")) {
-    return NextResponse.json({ error: "无权限" }, { status: 403 })
+  if (!user || (user.role !== "ADMIN" && user.role !== "SUPER_ADMIN")) {
+    return NextResponse.json({ error: "无权限访问" }, { status: 403 })
   }
 
   const { id } = await params
@@ -47,20 +60,15 @@ export async function PUT(
   return NextResponse.json(category)
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await auth()
-  const userRole = (session?.user as any)?.role
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const user = await getUserFromRequest(req)
   
-  if (!session?.user || (userRole !== "ADMIN" && userRole !== "SUPER_ADMIN")) {
-    return NextResponse.json({ error: "无权限" }, { status: 403 })
+  if (!user || (user.role !== "ADMIN" && user.role !== "SUPER_ADMIN")) {
+    return NextResponse.json({ error: "无权限访问" }, { status: 403 })
   }
 
   const { id } = await params
   
-  // Check if category has services
   const serviceCount = await prisma.servicePrice.count({ where: { categoryId: id } })
   if (serviceCount > 0) {
     return NextResponse.json({ error: "该分类下有检测项目，无法删除" }, { status: 400 })

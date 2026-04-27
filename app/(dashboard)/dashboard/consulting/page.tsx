@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,11 +18,19 @@ type Consultation = {
 export default function ConsultingPage() {
   const [consultations, setConsultations] = useState<Consultation[]>([])
   const [form, setForm] = useState({ subject: "", message: "" })
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    fetch("/api/consultations")
+      .then((r) => r.json())
+      .then((data) => { setConsultations(Array.isArray(data) ? data : []); setLoading(false) })
+      .catch(() => setLoading(false))
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setLoading(true)
+    setSubmitting(true)
     try {
       const res = await fetch("/api/consultations", {
         method: "POST",
@@ -35,7 +43,7 @@ export default function ConsultingPage() {
         setForm({ subject: "", message: "" })
       }
     } catch {}
-    setLoading(false)
+    setSubmitting(false)
   }
 
   return (
@@ -54,17 +62,26 @@ export default function ConsultingPage() {
               <Label htmlFor="message">详细描述</Label>
               <Textarea id="message" placeholder="请详细描述您的问题，至少10个字符" rows={5} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} required />
             </div>
-            <Button type="submit" disabled={loading}>
-              <Send className="mr-2 h-4 w-4" />{loading ? "提交中..." : "提交咨询"}
+            <Button type="submit" disabled={submitting}>
+              <Send className="mr-2 h-4 w-4" />{submitting ? "提交中..." : "提交咨询"}
             </Button>
           </form>
         </CardContent>
       </Card>
 
-      {consultations.length > 0 && (
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold">历史咨询</h2>
-          {consultations.map((c) => (
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold">历史咨询</h2>
+        {loading ? (
+          <div className="py-12 text-center text-muted-foreground">加载中...</div>
+        ) : consultations.length === 0 ? (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <MessageSquare className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+              <p className="text-muted-foreground">暂无咨询记录</p>
+            </CardContent>
+          </Card>
+        ) : (
+          consultations.map((c) => (
             <Card key={c.id}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
@@ -83,9 +100,9 @@ export default function ConsultingPage() {
                 )}
               </CardContent>
             </Card>
-          ))}
-        </div>
-      )}
+          ))
+        )}
+      </div>
     </div>
   )
 }

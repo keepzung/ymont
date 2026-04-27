@@ -1,16 +1,33 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await auth()
-  const userRole = (session?.user as any)?.role
+async function getUserFromRequest(req: NextRequest) {
+  const token = req.cookies.get("auth-token")?.value
   
-  if (!session?.user || (userRole !== "ADMIN" && userRole !== "SUPER_ADMIN")) {
-    return NextResponse.json({ error: "无权限" }, { status: 403 })
+  if (!token) return null
+  
+  try {
+    const decoded = Buffer.from(token, "base64").toString()
+    const [userId, role] = decoded.split(":")
+    
+    if (!userId) return null
+    
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, name: true, email: true, phone: true, role: true }
+    })
+    
+    return user
+  } catch {
+    return null
+  }
+}
+
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const user = await getUserFromRequest(req)
+  
+  if (!user || (user.role !== "ADMIN" && user.role !== "SUPER_ADMIN")) {
+    return NextResponse.json({ error: "无权限访问" }, { status: 403 })
   }
 
   const { id } = await params
@@ -24,34 +41,27 @@ export async function GET(
     },
   })
 
-  if (!order) return NextResponse.json({ error: "不存在" }, { status: 404 })
+  if (!order) return NextResponse.json({ error: "订单不存在" }, { status: 404 })
 
   return NextResponse.json(order)
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await auth()
-  const userRole = (session?.user as any)?.role
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const user = await getUserFromRequest(req)
   
-  if (!session?.user || (userRole !== "ADMIN" && userRole !== "SUPER_ADMIN")) {
-    return NextResponse.json({ error: "无权限" }, { status: 403 })
+  if (!user || (user.role !== "ADMIN" && user.role !== "SUPER_ADMIN")) {
+    return NextResponse.json({ error: "无权限访问" }, { status: 403 })
   }
 
   const { id } = await params
-  const body = await request.json()
+  const body = await req.json()
   const { status, adminRemark } = body
-  const adminId = session.user.id
 
   const updateData: any = {}
-  if (status) {
-    updateData.status = status
-  }
+  if (status) updateData.status = status
   if (adminRemark !== undefined) {
     updateData.adminRemark = adminRemark
-    updateData.adminUpdatedBy = adminId
+    updateData.adminUpdatedBy = user.id
   }
 
   const order = await prisma.order.update({
